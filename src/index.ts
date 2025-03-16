@@ -12,7 +12,11 @@ config();
 
 const app = new Hono();
 const port = process.env.PORT || 8000;
-app.use('*', cors({ origin: '*' })); // Tambahkan CORS
+app.use('*', cors({
+    origin: 'https://frontend-weather-app-sepia.vercel.app', // URL frontend
+    credentials: true, // Izinkan kredensial seperti cookies
+  }));
+  
 app.use('*', httpLogger);
 app.onError(ErrorHandler);
 app.route('/api', routes);
