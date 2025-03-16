@@ -12,5 +12,8 @@
       "src": "/(.*)",
       "dest": "src/index.ts"
     }
-  ]
+  ],
+  "env": {
+    "BUN_BIN": "bun"
+  }
 }
