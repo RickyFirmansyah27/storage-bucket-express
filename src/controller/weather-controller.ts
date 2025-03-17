@@ -143,7 +143,9 @@ export const getHistoryWeather = async (c: Context) => {
   try {
     const historyData = await weatherService.getHistoryWeatherData(lat, lon, startDate, endDate);
     if(!historyData){
-      return BaseResponse(c, 'Failed fetching data now or expired API key', 'badRequest', { data: [] });
+      const response = await WeatherService.getAllWeathers();
+      Logger.info(`getHistoryWeather| failed fetch data, changes to data internal`);;
+      return BaseResponse(c, 'weather fetched successfully', 'success', response)
     }
     const history = historyData.data.map((data: any) => {
         const date = new Date(data.ts * 1000);
