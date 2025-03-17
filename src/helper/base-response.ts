@@ -11,6 +11,10 @@ export const BaseResponse = (
   let status = 200; // Default status code
 
   switch (type) {
+    case 'badRequest':
+      responseData = { statusCode: 400, status: false, message: resMessage };
+      status = 400;
+      break;
     case 'created':
       responseData = { statusCode: 201, status: true, message: resMessage };
       status = 201;
