@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
     "start": "bun run ./dist/index.js"
   },
   "dependencies": {
@@ -19,6 +19,7 @@
     "axios": "^1.8.3",
     "bcryptjs": "^3.0.2",
     "bun": "^1.2.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "hono": "^3.12.11",
     "http": "^0.0.1-security",

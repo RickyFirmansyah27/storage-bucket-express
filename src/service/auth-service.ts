@@ -1,5 +1,5 @@
 import { getUserByEmail, createUser } from './user-service';
-import { password } from "bun";
+import crypto from 'crypto';
 import { generateJWT } from '../helper/jwt-helper';
 
 const registerUser = async (name: string, email: string, passwordRaw: string) => {
@@ -10,7 +10,10 @@ const registerUser = async (name: string, email: string, passwordRaw: string) =>
     throw new Error('Email is already taken');
   }
 
-  const hashedPassword = await password.hash(passwordRaw);
+  // Using crypto for password hashing
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(passwordRaw, salt, 1000, 64, 'sha512').toString('hex');
+  const hashedPassword = `${salt}:${hash}`;
 
   const { user } = await createUser(name, email, hashedPassword);
 
@@ -23,8 +26,11 @@ const loginUser = async (email: string, passwordRaw: string) => {
     throw new Error('User not found');
   }
 
-  // Verifikasi password
-  const isPasswordValid = await password.verify(passwordRaw, user[0].password);
+  // Verifikasi password using crypto
+  const [salt, storedHash] = user[0].password.split(':');
+  const hash = crypto.pbkdf2Sync(passwordRaw, salt, 1000, 64, 'sha512').toString('hex');
+  const isPasswordValid = storedHash === hash;
+  
   if (!isPasswordValid) {
     throw new Error('Invalid credentials');
   }
