@@ -72,7 +72,7 @@ export const getWeather = async (c: Context) => {
   const { latitude, longitude, include } = c.req.query();
 
   if (!latitude || !longitude) {
-    return BaseResponse(c, 'Latitude and longitude are required', 'error', { data: null });
+    return BaseResponse(c, 'Latitude and longitude are required', 'error', { data: [] });
   }
 
   // Convert latitude and longitude to numbers
@@ -81,7 +81,7 @@ export const getWeather = async (c: Context) => {
 
   // Check for invalid latitude and longitude
   if (isNaN(lat) || isNaN(lon)) {
-    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: null });
+    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: [] });
   }
 
   try {
@@ -114,7 +114,7 @@ export const getWeather = async (c: Context) => {
     return BaseResponse(c, 'Weather data fetched successfully', 'success', weather);
   } catch (error: unknown) {
     Logger.error(`${contextWeatherController} | Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return BaseResponse(c, 'Internal Server Error', 'error', { data: null });
+    return BaseResponse(c, 'Internal Server Error', 'error', { data: [] });
   }
 };
 
@@ -123,7 +123,7 @@ export const getHistoryWeather = async (c: Context) => {
   const { latitude, longitude, startDate, endDate } = c.req.query();
 
   if (!latitude || !longitude || !startDate || !endDate) {
-    return BaseResponse(c, 'Latitude, longitude, start date, and end date are required', 'error', { data: null });
+    return BaseResponse(c, 'Latitude, longitude, start date, and end date are required', 'error', { data: [] });
   }
 
   // Convert latitude and longitude to numbers
@@ -132,7 +132,7 @@ export const getHistoryWeather = async (c: Context) => {
 
   // Check for invalid latitude and longitude
   if (isNaN(lat) || isNaN(lon)) {
-    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: null });
+    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: [] });
   }
 
   try {
@@ -163,7 +163,7 @@ export const getHistoryWeather = async (c: Context) => {
     return BaseResponse(c, 'Weather history data fetched successfully', 'success', history);
   } catch (error: unknown) {
     Logger.error(`${contextWeatherController} | Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return BaseResponse(c, 'Internal Server Error', 'error', { data: null });
+    return BaseResponse(c, 'Internal Server Error', 'error', { data: [] });
   }
 };
 
@@ -172,7 +172,7 @@ export const addWeather = async (c: Context) => {
   const { latitude, longitude, include } = c.req.query();
 
   if (!latitude || !longitude) {
-    return BaseResponse(c, 'Latitude and longitude are required', 'error', { data: null });
+    return BaseResponse(c, 'Latitude and longitude are required', 'error', { data: [] });
   }
 
   // Convert latitude and longitude to numbers
@@ -181,7 +181,7 @@ export const addWeather = async (c: Context) => {
 
   // Check for invalid latitude and longitude
   if (isNaN(lat) || isNaN(lon)) {
-    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: null });
+    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: [] });
   }
 
   try {
@@ -216,7 +216,7 @@ export const addWeather = async (c: Context) => {
     return BaseResponse(c, 'Weather data added successfully', 'success', weather);
   } catch (error: unknown) {
     Logger.error(`${contextWeatherController} | Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    return BaseResponse(c, 'Internal Server Error', 'error', { data: null });
+    return BaseResponse(c, 'Internal Server Error', 'error', { data: [] });
   }
 };
 
@@ -230,7 +230,7 @@ export const getForecastWeather = async (c: Context) => {
   const { latitude, longitude } = c.req.query();
 
   if (!latitude || !longitude) {
-    return BaseResponse(c, 'Latitude and longitude are required', 'error', { data: null });
+    return BaseResponse(c, 'Latitude and longitude are required', 'error', { data: [] });
   }
 
   // Convert latitude and longitude to numbers
@@ -239,7 +239,7 @@ export const getForecastWeather = async (c: Context) => {
 
   // Check for invalid latitude and longitude
   if (isNaN(lat) || isNaN(lon)) {
-    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: null });
+    return BaseResponse(c, 'Invalid latitude or longitude', 'error', { data: [] });
   }
 
   try {
@@ -271,6 +271,6 @@ export const getForecastWeather = async (c: Context) => {
     return BaseResponse(c, 'weather fetched successfully', 'success', forecastPoints)
   } catch (error) {
     Logger.error(`WeatherController | getForecastWeather`, error);
-    return BaseResponse(c, 'Internal Server Error', 'error', { data: null });
+    return BaseResponse(c, 'Internal Server Error', 'error', { data: [] });
   }
 };
