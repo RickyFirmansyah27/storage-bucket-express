@@ -7,6 +7,6 @@ userRoutes.get('/', getWeather);
 userRoutes.get('/history', getHistoryWeather);
 userRoutes.get('/check', addWeather);
 userRoutes.get('/list', getListWeather);
-userRoutes.get('/forcast', getForecastWeather);
+userRoutes.get('/forecast', getForecastWeather);
 
 export default userRoutes;

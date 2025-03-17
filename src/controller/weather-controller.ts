@@ -1,7 +1,12 @@
+import { config } from 'dotenv';
 import { BaseResponse, Logger } from '../helper';
 import { Context } from 'hono';
 import WeatherService from '../service/weather-service';
 import axios from 'axios';
+import path from 'path';
+const envPath = path.resolve(__dirname, '../../.env');
+
+config({ path: envPath });
 
 const API_KEY = '715c761658e94947baa52463aececb51';
 const BASE_URL = 'http://api.weatherbit.io/v2.0/current';
@@ -20,6 +25,7 @@ const weatherService = {
           key: API_KEY,
         },
       });
+      console.log(response)
       Logger.info('Weather data fetched successfully', { data: response.data });
       return response.data;
     } catch (error) {
