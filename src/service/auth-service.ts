@@ -6,7 +6,7 @@ import { generateJWT } from '../helper/jwt-helper';
 
 export const createAuth = async (idCard: string, role: string, username: string, password: string) => {
   const query = `
-    INSERT INTO "Auth" (idCard, role, username, password)
+    INSERT INTO "Auth" ("idCard", "role", "username", "password")
     VALUES ($1, $2, $3, $4)
     RETURNING *;
   `;

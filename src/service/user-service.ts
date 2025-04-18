@@ -25,7 +25,7 @@ export const getUserByName = async (name: string) => {
 export const createUser = async (idCard: string, name: string, position: string, departement: string, role: string) => {
   const id = cuid.default();
   const query = `
-    INSERT INTO "User" (id, idCard, name, position, departement, role)
+    INSERT INTO "User" (id, "idCard", "name", "position", "departement", "role")
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *;
   `;
