@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "build": "bun build ./src/index.ts --outdir ./dist --target node",
-    "start": "bun run ./dist/index.js",
-    "postinstall": "npx prisma generate and npx prisma migrate deploy"
+    "start": "bun run ./dist/index.js"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
