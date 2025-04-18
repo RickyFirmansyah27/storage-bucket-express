@@ -1,33 +1,60 @@
-import { getUserByEmail, createUser } from './user-service';
-import crypto from 'crypto';
+import { executeSQLQuery } from '../config/dbPoolInfra';
+import { getUserByIdCard, getUserByName } from './user-service';
+import * as crypto from 'crypto';
+import * as cuid from 'cuid';
 import { generateJWT } from '../helper/jwt-helper';
 
-const registerUser = async (name: string, email: string, passwordRaw: string) => {
-  const [existingUser] = await getUserByEmail(email);
+export const createAuth = async (idCard: string, role: string, username: string, password: string) => {
+  const query = `
+    INSERT INTO "Auth" (idCard, role, username, password)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *;
+  `;
 
-  console.log('existingUser', existingUser);
+  const queryParams = [idCard, role, username, password];
+
+  return executeSQLQuery(query, queryParams);
+};
+
+const getUserAuthByUsername = (username: string) => {
+  const query = 'SELECT * FROM "Auth" WHERE username = $1';
+  const params = [username];
+
+  return executeSQLQuery(query, params);
+};
+
+const registerUser = async (
+  idCard: string,
+  role: string,
+  username: string,
+  password: string
+) => {
+  const [existingUser] = await getUserAuthByUsername(username);
+
   if (existingUser) {
-    throw new Error('Email is already taken');
+    throw new Error('username already exists');
   }
 
   // Using crypto for password hashing
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync(passwordRaw, salt, 1000, 64, 'sha512').toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
   const hashedPassword = `${salt}:${hash}`;
 
-  const { user } = await createUser(name, email, hashedPassword);
+  const user = await createAuth(idCard, role, username, hashedPassword);
 
-  return { user };
+  return [user];
 };
 
-const loginUser = async (email: string, passwordRaw: string) => {
-  const user = await getUserByEmail(email);
-  if (!user) {
+
+
+const loginUser = async (username: string, passwordRaw: string) => {
+  const [userAuth] = await getUserAuthByUsername(username);
+  if (!userAuth) {
     throw new Error('User not found');
   }
 
   // Verifikasi password using crypto
-  const [salt, storedHash] = user[0].password.split(':');
+  const [salt, storedHash] = userAuth.password.split(':');
   const hash = crypto.pbkdf2Sync(passwordRaw, salt, 1000, 64, 'sha512').toString('hex');
   const isPasswordValid = storedHash === hash;
   
@@ -36,10 +63,10 @@ const loginUser = async (email: string, passwordRaw: string) => {
   }
 
   // Generate JWT token
-  const token = await generateJWT(user[0].id, user[0].email);
-
-  return { token, user: user[0] };
+  const token = await generateJWT(userAuth.idCard, userAuth.password);
+  return { token, user: userAuth };
 };
+
 
 export default {
   registerUser,

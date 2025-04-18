@@ -1,3 +1,4 @@
 # deps
+*.db
 node_modules/
 .vercel

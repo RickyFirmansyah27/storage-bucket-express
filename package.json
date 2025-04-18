@@ -1,17 +1,19 @@
 {
-  "name": "bun-hono-typescript",
+  "name": "sistem-rfid-backend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "build": "bun build ./src/index.ts --outdir ./dist --target node",
-    "start": "bun run ./dist/index.js"
+    "start": "bun run ./dist/index.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hono/node-server": "^1.13.7",
     "@logtail/node": "^0.5.2",
     "@logtail/winston": "^0.5.2",
+    "@prisma/client": "^6.6.0",
     "@types/bcrypt": "^5.0.2",
     "@types/bun": "^1.1.14",
     "@types/jsonwebtoken": "^9.0.9",
@@ -20,11 +22,13 @@
     "bcryptjs": "^3.0.2",
     "bun": "^1.2.5",
     "crypto": "^1.0.1",
-    "dotenv": "^16.4.5",
+    "cuid": "^3.0.0",
+    "dotenv": "^16.5.0",
     "hono": "^3.12.11",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
+    "path": "^0.12.7",
     "pg": "^8.14.0",
     "reflect-metadata": "^0.2.2",
     "serverless-http": "^3.2.0",

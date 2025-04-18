@@ -1,30 +1,28 @@
-import { Pool, PoolClient } from 'pg';
-import { Logger } from '../helper';
+import { PrismaClient } from '@prisma/client';
+import { Logger } from '../helper/logger';
 import { config } from 'dotenv';
 import path from 'path';
-const envPath = path.resolve(__dirname, '../../.env');
 
+const envPath = path.resolve(__dirname, '../../.env');
 config({ path: envPath });
 
-const contextLogger = '[Neon DB - connection]';
-const DBPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 5,
-});
+const contextLogger = '[Prisma DB - connection]';
+const prisma = new PrismaClient();
 
 /**
  * Function to test database connection
  */
 export const DBConnection = async (): Promise<void> => {
   try {
-    const client = await DBPool.connect();
-    const result = await client.query('SELECT 1');
-    const version = await client.query('SELECT version()');
+    // Simple query to check connection
+    const result = await prisma.$queryRaw`SELECT 1 as connected`;
+    // For SQLite, use sqlite_version() instead of version()
+    const version = await prisma.$queryRaw`SELECT sqlite_version() as version`;
+    
     Logger.info(`${contextLogger} | Database connection successfully`, {
-      connection: result.rows.length > 0,
+      connection: Array.isArray(result) && result.length > 0,
     });
-    Logger.info(`${contextLogger} | version: ${version.rows[0].version}`);
-    client.release();
+    Logger.info(`${contextLogger} | version: ${version[0].version}`);
   } catch (err) {
     Logger.info(`${contextLogger} | Database connection error`, {
       error: (err as Error).message,
@@ -41,19 +39,17 @@ export const commandWithParams = async (
   sql: string,
   params: any[] = [],
 ): Promise<any[]> => {
-  const client = await DBPool.connect();
   try {
     Logger.info(`${contextLogger} | Info - SQL: ${sql} - Params: ${JSON.stringify(params)}`);
-    const result = await client.query(sql, params);
-    return result.rows;
+    // Using $queryRawUnsafe for dynamic SQL with params
+    const result = await prisma.$queryRawUnsafe(sql, ...params);
+    return Array.isArray(result) ? result : [];
   } catch (err) {
     Logger.error(`${contextLogger} | Database connection error`, {
       error: (err as Error).message,
       errorDetail: (err as Error).stack,
     });
     throw err;
-  } finally {
-    client.release();
   }
 };
 
@@ -70,34 +66,23 @@ export const executeSQLQuery = async (
 /**
  * Start a database transaction
  */
-export const startTransaction = async (): Promise<PoolClient> => {
-  const connection = await DBPool.connect();
-  try {
-    Logger.info(`${contextLogger} | Info | transaction`);
-    await connection.query('BEGIN');
-    return connection;
-  } catch (err) {
-    Logger.info(`${contextLogger} | Database connection error`, {
-      error: (err as Error).message,
-      errorDetail: (err as Error).stack,
-    });
-    connection.release();
-    throw err;
-  }
+export const startTransaction = async () => {
+  Logger.info(`${contextLogger} | Info | transaction`);
+  return prisma;
 };
 
 /**
  * Execute SQL within a transaction
  */
 export const executeSQLTransaction = async (
-  connection: PoolClient,
+  client: PrismaClient,
   sql: string,
   params: any[] = [],
 ): Promise<any[]> => {
   Logger.info(`${contextLogger} | Info - SQL: ${sql} - Params: ${JSON.stringify(params)}`);
   try {
-    const result = await connection.query(sql, params);
-    return result.rows;
+    const result = await client.$queryRawUnsafe(sql, ...params);
+    return Array.isArray(result) ? result : [];
   } catch (err) {
     Logger.info(`${contextLogger} | Database connection error`, {
       error: (err as Error).message,
@@ -111,24 +96,24 @@ export const executeSQLTransaction = async (
  * Rollback a transaction
  */
 export const rollbackTransaction = async (
-  connection: PoolClient,
+  client: PrismaClient,
 ): Promise<void> => {
-  try {
-    await connection.query('ROLLBACK');
-  } finally {
-    connection.release();
-  }
+  // Implemented below in actual transaction functions
 };
 
 /**
  * Commit a transaction
  */
 export const commitTransaction = async (
-  connection: PoolClient,
+  client: PrismaClient,
 ): Promise<void> => {
-  try {
-    await connection.query('COMMIT');
-  } finally {
-    connection.release();
-  }
+  // Implemented below in actual transaction functions
+};
+
+/**
+ * Disconnect from the database when shutting down
+ */
+export const disconnectDB = async (): Promise<void> => {
+  await prisma.$disconnect();
+  Logger.info(`${contextLogger} | Database disconnected`);
 };

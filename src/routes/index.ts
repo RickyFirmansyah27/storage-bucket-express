@@ -2,13 +2,15 @@
 import "reflect-metadata";
 import { Hono } from 'hono';
 import AuthRoutes from './auth-route';
-import WeatherRoutes from './weather-route';
+import UserRoutes from './user-route';
+import AttendanceRoutes from './attendance-route';
 
 const router = new Hono();
-const basePath = '/hono';
+const basePath = '/v1';
 
 // Mount routes with base path
 router.route(`${basePath}/auth`, AuthRoutes);
-router.route(`${basePath}/weather`, WeatherRoutes);
+router.route(`${basePath}/users`, UserRoutes);
+router.route(`${basePath}/attendance`, AttendanceRoutes);
 
 export { router as routes };

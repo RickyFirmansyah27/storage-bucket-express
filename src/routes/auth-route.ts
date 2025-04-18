@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { registerHandler, loginHandler } from '../controller/auth-controller';
 
-const userRoutes = new Hono();
+const authRoute = new Hono();
 
-userRoutes.post('/register', registerHandler);
-userRoutes.post('/login', loginHandler);
+authRoute.post('/register', registerHandler);
+authRoute.post('/login', loginHandler);
 
-export default userRoutes;
+export default authRoute;

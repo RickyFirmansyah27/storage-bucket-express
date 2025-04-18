@@ -1,4 +1,3 @@
-import { BusinessException } from './business-exception';
 import { Context } from 'hono';
 
 export const BaseResponse = (
