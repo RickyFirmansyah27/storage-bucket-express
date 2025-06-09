@@ -12,7 +12,7 @@ config();
 const app = new Hono();
 const port = process.env.PORT || 8000;
 app.use('*', cors({
-  origin: ['*.vercel.app', 'http://localhost:8080'],
+  origin: ['*.vercel.app', 'http://localhost:3000'],
   credentials: true,
 }));
   
