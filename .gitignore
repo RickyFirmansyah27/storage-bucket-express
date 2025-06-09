@@ -1,4 +1,10 @@
-# deps
+# Dependencies
 node_modules/
-.vercel
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Deployment
+.vercel
