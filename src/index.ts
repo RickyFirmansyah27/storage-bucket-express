@@ -5,7 +5,6 @@ import { Logger } from './helper/logger';
 import { ErrorHandler } from './helper/error-handler';
 import { routes } from './routes';
 import { httpLogger } from './helper/http-logger';
-import { DBConnection } from './config/dbPoolInfra';
 import { serverless } from './helper';
 
 config();
@@ -13,7 +12,7 @@ config();
 const app = new Hono();
 const port = process.env.PORT || 8000;
 app.use('*', cors({
-  origin: ['https://frontend-weather-app-sepia.vercel.app', 'http://localhost:8080'],
+  origin: ['*.vercel.app', 'http://localhost:8080'],
   credentials: true,
 }));
   
@@ -26,7 +25,6 @@ const server = serverless(app);
 
 server.listen(port, async (): Promise<void> => {
   try {
-      await DBConnection();
       Logger.info(`[Hono-Service] Server is running on port ${port}`);
   } catch (error) {
       if (error instanceof Error) {
