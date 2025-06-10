@@ -6,9 +6,9 @@ const envPath = path.resolve(__dirname, '../../.env');
 
 config({ path: envPath });
 
-const contextLogger = '[Neon DB - connection]';
+const contextLogger = '[Supabase DB - connection]';
 const DBPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:qn1MrhZREMsLiv0v@db.ojjqadkskrmznmcggnqe.supabase.co:5432/postgres",
   max: 5,
 });
 

@@ -1,14 +1,15 @@
-// src/middleware/error-handler.ts
-import { Context } from 'hono';
+import { Request, Response, NextFunction } from 'express';
 import boom from '@hapi/boom';
 
-export const ErrorHandler = (err: Error, c: Context) => {
+export const ErrorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const boomError = boom.boomify(err);
-  return c.json(
-    {
-      message: boomError.message,
-      statusCode: boomError.output.statusCode,
-    },
-    boomError.output.statusCode
-  );
+  res.status(boomError.output.statusCode).json({
+    message: boomError.message,
+    statusCode: boomError.output.statusCode,
+  });
 };

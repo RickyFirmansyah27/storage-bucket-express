@@ -1,13 +1,8 @@
-// src/routes/index.ts
-import "reflect-metadata";
-import { Hono } from 'hono';
-import StorageRoute from './storage-route';
+import storageRoute from './storage-route';
 
-const router = new Hono();
-const basePath = '/v1';
-
-// Mount routes with base path
-router.route(`${basePath}/s3`, StorageRoute);
+const basePath = '/api/v1';
 
 
-export { router as routes };
+export const routes = [
+    { path: `${basePath}/s3`, handler: storageRoute },
+];

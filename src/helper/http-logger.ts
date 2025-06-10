@@ -1,31 +1,26 @@
-import { Context } from 'hono';
+import { NextFunction, Request, Response } from 'express';
 import { Logger } from './logger';
 
-export const httpLogger = async (c: Context, next: () => Promise<void>) => {
-  const headersObj: Record<string, string | string[]> = Object.entries(c.req.headers).reduce(
-    (acc, [name, value]) => {
-      if (value !== undefined) {
-        acc[name] = value;
-      }
-      return acc;
-    },
-    {} as Record<string, string | string[]>
-  );
+export const httpLogger = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void => {
+    const start = process.hrtime();
 
-  const start = performance.now();
-  Logger.http({
-    message: `Request | Method: ${c.req.method} | Headers: ${JSON.stringify(headersObj)} | URL: ${c.req.url}`,
-  });
 
-  try {
-    await next();
-  } catch (err) {
-    Logger.error(`Error occurred: ${err}`);
-    throw err;
-  }
+    Logger.http({
+        message: `Request | Method: ${req.method} | Headers: ${JSON.stringify(req.headers)}  | URL: ${req.originalUrl}`
+    });
 
-  const durationInMs = performance.now() - start;
-  Logger.http({
-    message: `Response | Method: ${c.req.method} | URL: ${c.req.url} | Status: ${c.res.status} | Duration: ${durationInMs.toFixed(2)} ms`,
-  });
+    res.on('finish', () => {
+        const duration = process.hrtime(start);
+        const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
+
+        Logger.http({
+            message: `Response | Method: ${req.method} | URL: ${req.originalUrl} | Status: ${res.statusCode} | Duration: ${durationInMs.toFixed(2)} ms`
+        });
+    });
+
+    next();
 };

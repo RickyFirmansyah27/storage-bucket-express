@@ -1,7 +1,7 @@
-import { Context } from 'hono';
+import type { Response } from 'express';
 
 export const BaseResponse = (
-  c: Context,
+  res: Response,
   resMessage: string,
   type: string,
   result: any = null,
@@ -34,5 +34,5 @@ export const BaseResponse = (
       break;
   }
 
-  return c.json(responseData, { status }); 
+  return res.status(status).json(responseData);
 };
