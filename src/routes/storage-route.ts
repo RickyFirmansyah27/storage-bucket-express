@@ -1,4 +1,4 @@
-import { downloadFile, getFiles, uploadFile, uploadFileHandler } from '../controller/supabase-controller';
+import { deleteFileHandler, downloadFile, getFiles, uploadFile, uploadFileHandler } from '../controller/supabase-controller';
 import { Router } from 'express';
 import multer from 'multer';
 
@@ -10,5 +10,6 @@ const storageRoute = Router();
 storageRoute.route('/supabase').get(getFiles);
 storageRoute.route('/supabase').post(upload.single('file'), uploadFileHandler);
 storageRoute.route('/supabase/download').get(downloadFile);
+storageRoute.route('/supabase/delete').get(deleteFileHandler);
 
 export default storageRoute;

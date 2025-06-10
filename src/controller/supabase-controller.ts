@@ -8,6 +8,7 @@ import { BaseResponse, Logger } from "../helper";
 import {
   S3Client,
   PutObjectCommand,
+  DeleteObjectCommand
 } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 dotenv.config();
@@ -196,5 +197,31 @@ export const uploadFileHandler = async (
   } catch (error) {
     Logger.error('Error uploading file', error);
     BaseResponse(res, 'Error uploading file', "internalServerError");
+  }
+};
+
+export const deleteFileHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const filename = req.query.filename;
+    if (!filename) {
+      BaseResponse(res, "Filename is required", "badRequest");
+      return;
+    }
+
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `public/${filename}`,
+    });
+
+    await client.send(command);
+
+    Logger.info(`File deleted successfully: ${filename}`);
+    BaseResponse(res, "File deleted successfully", "success");
+  } catch (error) {
+    Logger.error('Error deleting file', error);
+    BaseResponse(res, 'Error deleting file', "internalServerError");
   }
 };
