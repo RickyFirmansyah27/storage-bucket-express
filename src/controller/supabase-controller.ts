@@ -5,11 +5,36 @@ import { createReadStream } from "fs";
 import mime from "mime-types";
 import { BaseResponse, Logger } from "../helper";
 
+import {
+  S3Client,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
+dotenv.config();
+
 // Initialize Supabase Client
 const supabase = createClient(
   process.env.SUPABASE_URL ?? "",
   process.env.SUPABASE_KEY ?? ""
 );
+
+const client = new S3Client({
+  forcePathStyle: true,
+  region: process.env.S3_REGION,
+  endpoint: process.env.S3_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+  },
+});
+
+// Define FileObject interface
+interface FileObject {
+  name: string;
+  size: number;
+  lastModified: Date;
+  url: string;
+}
 
 // Controller for fetching files
 export const getFiles = async (req: Request, res: Response): Promise<void> => {
@@ -135,5 +160,42 @@ export const downloadFile = async (
   } catch (err: any) {
     console.error("Download Server Error:", err);
     BaseResponse(res, err.message, "internalServerError");
+  }
+};
+
+
+export const uploadFileHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    // Use multer to handle file upload
+    const file = req.file;
+
+    if (!file) {
+      BaseResponse(res, "No file uploaded", "badRequest");
+      return;
+    }
+
+    const command = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `public/${file.originalname}`,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    });
+
+    await client.send(command);
+
+    const result = {
+      success: true,
+      url: `${process.env.S3_ENDPOINT}/${file.originalname}`,
+      key: file.originalname,
+    };
+
+    Logger.info(`File uploaded successfully: ${file.originalname}`, result);
+    BaseResponse(res, "Upload successful", "success", result);
+  } catch (error) {
+    Logger.error('Error uploading file', error);
+    BaseResponse(res, 'Error uploading file', "internalServerError");
   }
 };
