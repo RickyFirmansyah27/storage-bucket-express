@@ -29,6 +29,16 @@ app.use((req: Request, res: Response) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-app.listen(PORT, async () => {
-  Logger.info(`[Express-Service] Server is running on port ${PORT}`);
+app.listen(PORT, async (): Promise<void> => {
+  try {
+      Logger.info(`[Express-Service] Server is running on port ${PORT}`);
+  } catch (error) {
+      if (error instanceof Error) {
+          Logger.error(
+              `Error starting server: Message: ${error.message} | Stack: ${error.stack}`
+          );
+      } else {
+          Logger.error(`Error starting server: ${String(error)}`);
+      }
+  }
 });
