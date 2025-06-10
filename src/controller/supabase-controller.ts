@@ -72,7 +72,6 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
           name: file.name,
           bucketName: data?.bucketId,
           lastModified: data?.lastModified, 
-          size: data?.size,
           url: publicUrlData?.publicUrl,
         };
       })
