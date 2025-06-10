@@ -32,19 +32,28 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
       (file) => file.name !== ".emptyFolderPlaceholder"
     );
 
-    const fileUrls = await Promise.all(
+    const fileDetails = await Promise.all(
       filteredFiles.map(async (file) => {
-        const { data } = await supabase.storage
+        const { data: publicUrlData } = await supabase.storage
           .from("asset-manage")
           .getPublicUrl(`public/${file.name}`);
+
+        const { data } = await supabase.storage
+          .from("asset-manage") 
+          .info(`public/${file.name}`);
+
         return {
+          id: file.id,
           name: file.name,
-          url: data.publicUrl,
+          bucketName: data?.bucketId,
+          lastModified: data?.lastModified, 
+          size: data?.size,
+          url: publicUrlData?.publicUrl,
         };
       })
     );
 
-    BaseResponse(res, "Files fetched successfully", "success", fileUrls);
+    BaseResponse(res, "Files fetched successfully", "success", fileDetails);
   } catch (err: any) {
     Logger.error("Get Files Error:", err);
     BaseResponse(res, "Error fetching files", "internalServerError");
