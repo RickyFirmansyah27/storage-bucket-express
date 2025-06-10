@@ -2,7 +2,8 @@ import { downloadFile, getFiles, uploadFile } from '../controller/supabase-contr
 import { Router } from 'express';
 import multer from 'multer';
 
-const upload = multer({ dest: 'uploads/' });
+// Use /tmp directory for uploads in serverless environments like Vercel
+const upload = multer({ dest: '/tmp/' });
 
 const storageRoute = Router();
 
