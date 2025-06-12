@@ -92,35 +92,27 @@ export const uploadFile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const file = req.file;
-    if (!file) {
-      BaseResponse(res, "No file uploaded", "badRequest");
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      BaseResponse(res, "No files uploaded", "badRequest");
       return;
     }
 
-    const originalName = file.originalname;
-    const storagePath = `${originalName}`;
+    const uploadPromises = files.map(async (file) => {
+      const storagePath = `${file.originalname}`;
+      const { data, error } = await supabase.storage
+        .from("asset-manage")
+        .upload(storagePath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: true,
+        });
 
-    const { data, error } = await supabase.storage
-      .from("asset-manage")
-      .upload(storagePath, createReadStream(file.path), {
-        contentType: file.mimetype,
-        upsert: true,
-      });
-
-    // Cleanup temporary file
-    await fs.unlink(file.path);
-
-    if (error) {
-      Logger.error("Upload error:", error.message);
-      BaseResponse(res, error.message, "internalServerError");
-      return;
-    }
-
-    BaseResponse(res, "Upload successful", "success", {
-      path: storagePath,
-      data,
+      if (error) throw new Error(error.message);
+      return { path: storagePath, data };
     });
+
+    const results = await Promise.all(uploadPromises);
+    BaseResponse(res, "Files uploaded successfully", "success", { files: results });
   } catch (err: any) {
     Logger.error("Server Error:", err.message);
     BaseResponse(res, err.message, "internalServerError");
