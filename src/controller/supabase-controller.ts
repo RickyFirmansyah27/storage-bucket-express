@@ -156,43 +156,6 @@ export const downloadFile = async (
   }
 };
 
-
-export const uploadFileHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    // Use multer to handle file upload
-    const file = req.file;
-
-    if (!file) {
-      BaseResponse(res, "No file uploaded", "badRequest");
-      return;
-    }
-
-    const command = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: `public/${file.originalname}`,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    });
-
-    await client.send(command);
-
-    const result = {
-      success: true,
-      url: `${process.env.S3_ENDPOINT}/${file.originalname}`,
-      key: file.originalname,
-    };
-
-    Logger.info(`File uploaded successfully: ${file.originalname}`, result);
-    BaseResponse(res, "Upload successful", "success", result);
-  } catch (error) {
-    Logger.error('Error uploading file', error);
-    BaseResponse(res, 'Error uploading file', "internalServerError");
-  }
-};
-
 export const deleteFileHandler = async (
   req: Request,
   res: Response
@@ -206,7 +169,7 @@ export const deleteFileHandler = async (
 
     const command = new DeleteObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: `public/${filename}`,
+      Key: `${filename}`,
     });
 
     await client.send(command);
