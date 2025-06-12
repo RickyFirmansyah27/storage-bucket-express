@@ -8,7 +8,7 @@ const upload = multer({ dest: '/tmp/' });
 const storageRoute = Router();
 
 storageRoute.route('/supabase').get(getFiles);
-storageRoute.route('/supabase').post(upload.single('file'), uploadFileHandler);
+storageRoute.route('/supabase').post(upload.single('file'), uploadFile);
 storageRoute.route('/supabase/download').get(downloadFile);
 storageRoute.route('/supabase/delete').get(deleteFileHandler);
 

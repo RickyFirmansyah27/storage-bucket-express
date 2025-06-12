@@ -10,7 +10,7 @@ const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 8000;
 
 app.use(
   cors({
-    origin: ["https://online-code-preview.vercel.app", "http://localhost:3000"],
+    origin: '*',
     credentials: true,
   })
 );

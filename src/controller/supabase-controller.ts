@@ -42,7 +42,7 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: files, error } = await supabase.storage
       .from("asset-manage")
-      .list("public", { limit: 100, offset: 0 });
+      .list("", { limit: 100, offset: 0 });
 
     if (error) {
       BaseResponse(res, error.message, "internalServerError");
@@ -55,8 +55,9 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
     }
 
     const filteredFiles = files.filter(
-      (file) => file.name !== ".emptyFolderPlaceholder"
+      (file) => file.name !== ".emptyFolderPlaceholder" && file.name !== "public"
     );
+
 
     const fileDetails = await Promise.all(
       filteredFiles.map(async (file) => {
@@ -66,7 +67,7 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
 
         const { data } = await supabase.storage
           .from("asset-manage") 
-          .info(`public/${file.name}`);
+          .info(`${file.name}`);
 
         return {
           id: file.id,
@@ -98,7 +99,7 @@ export const uploadFile = async (
     }
 
     const originalName = file.originalname;
-    const storagePath = `public/${originalName}`;
+    const storagePath = `${originalName}`;
 
     const { data, error } = await supabase.storage
       .from("asset-manage")
@@ -133,7 +134,7 @@ export const downloadFile = async (
 ): Promise<void> => {
   try {
     const filename = req.query.filename;
-    const filePath = `public/${filename}`;
+    const filePath = `${filename}`;
     console.log(filePath);
 
     const { data } = await supabase.storage
