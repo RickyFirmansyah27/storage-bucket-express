@@ -1,0 +1,1 @@
+export { SupabaseService, supabaseService } from './supabase.service';
