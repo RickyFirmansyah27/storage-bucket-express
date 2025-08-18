@@ -26,13 +26,12 @@ const client = new S3Client({
   },
 });
 
-// Define FileObject interface
-interface FileObject {
-  name: string;
-  size: number;
-  lastModified: Date;
-  url: string;
-}
+// Helper function to determine folder based on firstName
+const getFolderByFirstName = (firstName: string): string => {
+  if (firstName === "Other") return "public";
+  if (firstName === "Zephyrion") return "";
+  return firstName;
+};
 
 // Controller for fetching files
 export const getFiles = async (req: Request, res: Response): Promise<void> => {
@@ -43,19 +42,84 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
       return;
     }
     Logger.info(`getFiles called with firstName: ${firstName}`);
+    
     const bucketName = "asset-manage";
-    const folder = firstName === "Zephyrion" ? "" : "public";
+    const folder = getFolderByFirstName(firstName);
 
     const { data: files, error } = await supabase.storage
       .from(bucketName)
       .list(folder, { limit: 100, offset: 0 });
 
     if (error) {
+      // If folder doesn't exist and it's not "Other", create the folder
+      if (firstName !== "Other" && firstName !== "Zephyrion") {
+        try {
+          // Create folder by uploading a placeholder file
+          const { error: createError } = await supabase.storage
+            .from(bucketName)
+            .upload(`${folder}/.emptyFolderPlaceholder`, new Blob([''], { type: 'text/plain' }), {
+              contentType: 'text/plain',
+              upsert: true,
+            });
+          
+          if (createError) {
+            Logger.error(`Error creating folder ${folder}:`, createError);
+          } else {
+            Logger.info(`Folder ${folder} created successfully`);
+          }
+          
+          // Return empty files array for newly created folder
+          BaseResponse(
+            res,
+            "Folder created successfully",
+            "success",
+            { files: [], firstName, folderCreated: true }
+          );
+          return;
+        } catch (createErr: any) {
+          Logger.error("Error creating folder:", createErr);
+          BaseResponse(res, "Error creating folder", "internalServerError");
+          return;
+        }
+      }
+      
       BaseResponse(res, error.message, "internalServerError");
       return;
     }
 
     if (!files || files.length === 0) {
+      // If no files found and it's not "Other" or "Zephyrion", create the folder
+      if (firstName !== "Other" && firstName !== "Zephyrion") {
+        try {
+          // Create folder by uploading a placeholder file
+          const { error: createError } = await supabase.storage
+            .from(bucketName)
+            .upload(`${folder}/.emptyFolderPlaceholder`, new Blob([''], { type: 'text/plain' }), {
+              contentType: 'text/plain',
+              upsert: true,
+            });
+          
+          if (createError) {
+            Logger.error(`Error creating folder ${folder}:`, createError);
+            BaseResponse(res, "No files found", "notFound");
+            return;
+          } else {
+            Logger.info(`Folder ${folder} created successfully`);
+            BaseResponse(
+              res,
+              "Folder created successfully",
+              "success",
+              { files: [], firstName, folderCreated: true }
+            );
+            return;
+          }
+        } catch (createErr: any) {
+          Logger.error("Error creating folder:", createErr);
+          BaseResponse(res, "Error creating folder", "internalServerError");
+          return;
+        }
+      }
+      
       BaseResponse(res, "No files found", "notFound");
       return;
     }
@@ -66,7 +130,7 @@ export const getFiles = async (req: Request, res: Response): Promise<void> => {
 
     const fileDetails = await Promise.all(
       filteredFiles.map(async (file) => {
-        const { data: publicUrlData } = await supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from(bucketName)
           .getPublicUrl(`${folder ? folder + "/" : ""}${file.name}`);
 
@@ -109,8 +173,9 @@ export const uploadFile = async (
       return;
     }
     Logger.info(`uploadFile called with firstName: ${firstName}`);
+    
     const bucketName = "asset-manage";
-    const folder = firstName === "Zephyrion" ? "" : "public";
+    const folder = getFolderByFirstName(firstName);
 
     if (!files || files.length === 0) {
       BaseResponse(res, "No files uploaded", "badRequest");
@@ -156,8 +221,10 @@ export const downloadFile = async (
       return;
     }
     Logger.info(`downloadFile called with firstName: ${firstName}`);
+    
     const bucketName = "asset-manage";
-    const folder = firstName === "Zephyrion" ? "" : "public";
+    const folder = getFolderByFirstName(firstName);
+    
     const filePath = `${folder ? folder + "/" : ""}${filename}`;
 
     const { data } = await supabase.storage
@@ -200,20 +267,36 @@ export const deleteFileHandler = async (
       return;
     }
     Logger.info(`deleteFileHandler called with firstName: ${firstName}`);
+    
     const bucketName = "asset-manage";
-    const folder = firstName === "Zephyrion" ? "" : "public";
+    const folder = getFolderByFirstName(firstName);
+    
     if (!filename) {
       BaseResponse(res, "Filename is required", "badRequest");
       return;
     }
 
-    // If using S3, you may need to adjust the bucket logic here as well.
-    const command = new DeleteObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME || bucketName,
-      Key: `${folder ? folder + "/" : ""}${filename}`,
-    });
+    // Only use S3 client when firstName is "Other"
+    if (firstName === "Other") {
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME || bucketName,
+        Key: `${folder ? folder + "/" : ""}${filename}`,
+      });
 
-    await client.send(command);
+      await client.send(command);
+    } else {
+      // Use Supabase storage for other users
+      const filePath = `${folder ? folder + "/" : ""}${filename}`;
+      const { error } = await supabase.storage
+        .from(bucketName)
+        .remove([filePath]);
+
+      if (error) {
+        Logger.error('Error deleting file from Supabase:', error);
+        BaseResponse(res, 'Error deleting file', "internalServerError");
+        return;
+      }
+    }
 
     Logger.info(`File deleted successfully: ${filename}`);
     BaseResponse(res, "File deleted successfully", "success", { filename, firstName, bucketName, folder });
