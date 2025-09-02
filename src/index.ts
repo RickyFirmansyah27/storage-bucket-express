@@ -4,6 +4,7 @@ import cors from "cors";
 import { Logger, httpLogger } from "./helper";
 import { routes } from "./routes";
 import { ErrorHandler } from "./helper/error-handler";
+import { DBConnection } from "./config/dbPoolInfra";
 
 const app: Express = express();
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 8000;
@@ -31,7 +32,8 @@ app.use((req: Request, res: Response) => {
 
 app.listen(PORT, async (): Promise<void> => {
   try {
-      Logger.info(`[Express-Service] Server is running on port ${PORT}`);
+    await DBConnection();
+    Logger.info(`[Express-Service] Server is running on port ${PORT}`);
   } catch (error) {
       if (error instanceof Error) {
           Logger.error(

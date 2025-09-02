@@ -1,73 +1,50 @@
-import { createClient } from "@supabase/supabase-js";
-import {
-  S3Client,
-  DeleteObjectCommand
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Logger } from "../helper";
-import dotenv from "dotenv";
-
-dotenv.config();
+import {
+  supabaseClient,
+  s3Client,
+  bucketName
+} from "../config/supabase-client";
+import {
+  getFolderByFirstName,
+  createFolderIfNotExists
+} from "../helper/folder-utils";
+import { commandWithParams } from "../config/dbPoolInfra";
 
 export class SupabaseService {
   private supabase;
   private s3Client;
-  private bucketName = "asset-manage";
+  private bucketName = bucketName;
 
   constructor() {
-    // Initialize Supabase Client
-    this.supabase = createClient(
-      process.env.SUPABASE_URL ?? "",
-      process.env.SUPABASE_KEY ?? ""
-    );
-
-    // Initialize S3 Client
-    this.s3Client = new S3Client({
-      forcePathStyle: true,
-      region: process.env.S3_REGION,
-      endpoint: process.env.S3_ENDPOINT,
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
-      },
-    });
+    // Assign clients from config
+    this.supabase = supabaseClient;
+    this.s3Client = s3Client;
   }
 
-  // Helper function to determine folder based on firstName
-  private getFolderByFirstName(firstName: string): string {
-    if (firstName === "Other") return "public";
-    if (firstName === "Zephyrion") return "";
-    return firstName;
-  }
-
-  // Create folder if it doesn't exist
-  private async createFolderIfNotExists(folder: string): Promise<boolean> {
-    try {
-      const { error } = await this.supabase.storage
-        .from(this.bucketName)
-        .upload(`${folder}/.emptyFolderPlaceholder`, new Blob([''], { type: 'text/plain' }), {
-          contentType: 'text/plain',
-          upsert: true,
-        });
-      
-      if (error) {
-        Logger.error(`Error creating folder ${folder}:`, error);
-        return false;
-      }
-      
-      Logger.info(`Folder ${folder} created successfully`);
-      return true;
-    } catch (error) {
-      Logger.error("Error creating folder:", error);
-      return false;
-    }
-  }
 
   // Get files from storage
   async getFiles(firstName: string) {
     try {
       Logger.info(`getFiles called with firstName: ${firstName}`);
-      
-      const folder = this.getFolderByFirstName(firstName);
+
+      // Database health check
+      try {
+        Logger.info('Performing database health check...');
+        const healthCheck = await commandWithParams('SELECT 1 as health_check', []);
+        if (healthCheck && healthCheck.length > 0) {
+          Logger.info('Database health check passed');
+        }
+      } catch (dbError: any) {
+        Logger.error('Database health check failed:', dbError);
+        return {
+          success: false,
+          message: 'Database connection failed',
+          error: dbError
+        };
+      }
+
+      const folder = getFolderByFirstName(firstName);
 
       const { data: files, error } = await this.supabase.storage
         .from(this.bucketName)
@@ -76,7 +53,7 @@ export class SupabaseService {
       if (error) {
         // If folder doesn't exist and it's not "Other", create the folder
         if (firstName !== "Other" && firstName !== "Zephyrion") {
-          const folderCreated = await this.createFolderIfNotExists(folder);
+          const folderCreated = await createFolderIfNotExists(folder);
           if (folderCreated) {
             return {
               success: true,
@@ -96,7 +73,7 @@ export class SupabaseService {
       if (!files || files.length === 0) {
         // If no files found and it's not "Other" or "Zephyrion", create the folder
         if (firstName !== "Other" && firstName !== "Zephyrion") {
-          const folderCreated = await this.createFolderIfNotExists(folder);
+          const folderCreated = await createFolderIfNotExists(folder);
           if (folderCreated) {
             return {
               success: true,
@@ -160,8 +137,8 @@ export class SupabaseService {
   async uploadFiles(files: Express.Multer.File[], firstName: string) {
     try {
       Logger.info(`uploadFile called with firstName: ${firstName}`);
-      
-      const folder = this.getFolderByFirstName(firstName);
+
+      const folder = getFolderByFirstName(firstName);
 
       if (!files || files.length === 0) {
         return {
@@ -204,8 +181,8 @@ export class SupabaseService {
   async downloadFile(filename: string, firstName: string) {
     try {
       Logger.info(`downloadFile called with firstName: ${firstName}`);
-      
-      const folder = this.getFolderByFirstName(firstName);
+
+      const folder = getFolderByFirstName(firstName);
       const filePath = `${folder ? folder + "/" : ""}${filename}`;
 
       const { data } = await this.supabase.storage
@@ -243,8 +220,8 @@ export class SupabaseService {
   async deleteFile(filename: string, firstName: string) {
     try {
       Logger.info(`deleteFile called with firstName: ${firstName}`);
-      
-      const folder = this.getFolderByFirstName(firstName);
+
+      const folder = getFolderByFirstName(firstName);
 
       if (!filename) {
         return {
