@@ -7,8 +7,12 @@ const envPath = path.resolve(__dirname, '../../.env');
 config({ path: envPath });
 
 const contextLogger = '[Supabase DB - connection]';
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is required but not set.');
+}
 const DBPool = new Pool({
-  connectionString: process.env.DATABASE_URL ?? "postgresql://postgres:qn1MrhZREMsLiv0v@db.ojjqadkskrmznmcggnqe.supabase.co:5432/postgres",
+  connectionString: process.env.DATABASE_URL,
+  ssl: false,
   max: 5,
 });
 

@@ -9,6 +9,7 @@ import {
   getFolderByFirstName,
   createFolderIfNotExists
 } from "../helper/folder-utils";
+import { commandWithParams } from "../config/dbPoolInfra";
 
 export class SupabaseService {
   private supabase;
@@ -26,6 +27,22 @@ export class SupabaseService {
   async getFiles(firstName: string) {
     try {
       Logger.info(`getFiles called with firstName: ${firstName}`);
+
+      // Database health check
+      try {
+        Logger.info('Performing database health check...');
+        const healthCheck = await commandWithParams('SELECT 1 as health_check', []);
+        if (healthCheck && healthCheck.length > 0) {
+          Logger.info('Database health check passed');
+        }
+      } catch (dbError: any) {
+        Logger.error('Database health check failed:', dbError);
+        return {
+          success: false,
+          message: 'Database connection failed',
+          error: dbError
+        };
+      }
 
       const folder = getFolderByFirstName(firstName);
 
