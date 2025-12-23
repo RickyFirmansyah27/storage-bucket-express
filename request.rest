@@ -1,6 +1,9 @@
 ### Get List of Files
 GET http://localhost:8000/api/v1/bucket/list
 
+### Get List of Files Supabase
+GET http://localhost:8000/api/v1/s3/supabase?firstName=Zephyrion
+
 ### Upload File
 POST http://localhost:8000/api/v1/bucket/upload
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
@@ -14,7 +17,7 @@ This is a test file for Google Drive upload.
 
 ### Get File by ID
 # Replace :fileId with an actual file ID from the "Get List of Files" response
-@fileId = 16Zf1w6qadvAPHQUXtkqTVg41OMhBFVN-
+@fileId = 1qb7RhWbj7H5Mr6AMtNetOnoXb_nGAfc5
 GET http://localhost:8000/api/v1/bucket/file/{{fileId}}
 
 ### Delete File by ID
