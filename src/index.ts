@@ -9,9 +9,11 @@ import { DBConnection } from "./config/dbPoolInfra";
 const app: Express = express();
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 8000;
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ["https://online-code-preview.vercel.app", "http://localhost:3000"];
+
 app.use(
   cors({
-    origin: ["https://online-code-preview.vercel.app", "http://localhost:3000"],
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -22,7 +24,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(ErrorHandler);
 
 routes.forEach(route => {
-    app.use(route.path, route.handler);
+  app.use(route.path, route.handler);
 });
 
 
@@ -35,12 +37,12 @@ app.listen(PORT, async (): Promise<void> => {
     await DBConnection();
     Logger.info(`[Express-Service] Server is running on port ${PORT}`);
   } catch (error) {
-      if (error instanceof Error) {
-          Logger.error(
-              `Error starting server: Message: ${error.message} | Stack: ${error.stack}`
-          );
-      } else {
-          Logger.error(`Error starting server: ${String(error)}`);
-      }
+    if (error instanceof Error) {
+      Logger.error(
+        `Error starting server: Message: ${error.message} | Stack: ${error.stack}`
+      );
+    } else {
+      Logger.error(`Error starting server: ${String(error)}`);
+    }
   }
 });
